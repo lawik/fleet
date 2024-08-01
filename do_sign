@@ -1,0 +1,3 @@
+#!/bin/bash
+
+mix nerves_hub.firmware sign --key devkey

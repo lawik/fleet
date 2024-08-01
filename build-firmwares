@@ -1,0 +1,24 @@
+#!/usr/bin/env elixir
+
+_key = System.fetch_env!("NH_KEY")
+_secret = System.fetch_env!("NH_SECRET")
+
+targets = [
+    "rpi0",
+    "rpi",
+    "rpi2",
+    "rpi3",
+    "rpi4",
+    "rpi5",
+    "grisp2",
+    "bbb",
+    "mangopi_mq_pro",
+    "osd32mp1",
+    "smartrent_hub",
+]
+
+targets
+|> Enum.each(fn target ->
+  {0,_} = System.shell("export MIX_TARGET=#{target}; ./do_build")
+  {0,_} = System.shell("export MIX_TARGET=#{target}; ./do_sign")
+end)
