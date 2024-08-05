@@ -14,11 +14,29 @@ targets = [
     "bbb",
     "mangopi_mq_pro",
     "osd32mp1",
-    "smartrent_hub",
+    "srhub",
 ]
 
 targets
-|> Enum.each(fn target ->
-  {0,_} = System.shell("export MIX_TARGET=#{target}; ./do_build")
-  {0,_} = System.shell("export MIX_TARGET=#{target}; ./do_sign")
+|> Enum.map(fn target ->
+  IO.puts("Building #{target}...")
+  with {_, 0} <- System.shell("export MIX_TARGET=#{target}; ./do_build") do
+    IO.puts("#{target} built OK")
+    target
+  else
+    {out, _} ->
+      IO.puts(out)
+      raise "foo"
+  end
+end)
+|> Enum.map(fn target ->
+  IO.puts("Signing #{target}...")
+  with {_, 0} <- System.shell("export MIX_TARGET=#{target}; ./do_sign") do
+    IO.puts("#{target} signed OK")
+    target
+  else
+    {out, _} ->
+      IO.puts(out)
+      raise "foo"
+  end
 end)
