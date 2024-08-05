@@ -3,7 +3,7 @@ defmodule Fleet.MixProject do
 
   #@app :fleet
   @app :berlin2024
-  @version "0.1.1"
+  @version "0.1.2-rc1"
   @all_targets [
     :rpi,
     :rpi0,
@@ -48,7 +48,7 @@ defmodule Fleet.MixProject do
       {:nerves, "~> 1.10", runtime: false},
       {:shoehorn, "~> 0.9.1"},
       {:ring_logger, "~> 0.10.0"},
-      {:toolshed, "~> 0.3.0"},
+      {:toolshed, "~> 0.4"},
 
       # Allow Nerves.Runtime on host to support development, testing and CI.
       # See config/host.exs for usage.
