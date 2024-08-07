@@ -30,3 +30,6 @@ ahead and do so.
 Success!
 Elapsed time: 3.595 s
 ```
+
+You may be able to log into the device via ssh and it's IP address or mDNS hostname if so, great. You can run `NervesHubLink.connected?` to check if it came online and joined its peers :)
+
