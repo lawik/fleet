@@ -98,9 +98,12 @@ config :nerves_hub_link,
   fwup_public_keys: ["ti2zRfSCr3ITpMU9ReghbGvsy8EOW+VbfAfy18oe59o="],
   org_name: "community-fleet",
   shared_secret: [
-    product_key: System.get_env("NH_KEY"),
-    product_secret: System.get_env("NH_SECRET")
+    product_key: System.fetch_env!("NH_KEY"),
+    product_secret: System.fetch_env!("NH_SECRET")
   ]
+
+config :nerves_hub_cli,
+  org: "community-fleet"
 
 # Import target specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

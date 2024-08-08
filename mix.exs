@@ -1,9 +1,9 @@
 defmodule Fleet.MixProject do
   use Mix.Project
 
-  #@app :fleet
+  # @app :fleet
   @app :berlin2024
-  @version "0.1.2-rc1"
+  @version "0.1.4"
   @all_targets [
     :rpi,
     :rpi0,
@@ -75,8 +75,12 @@ defmodule Fleet.MixProject do
       {:nerves_system_grisp2, "~> 0.8", runtime: false, targets: :grisp2},
       {:nerves_system_mangopi_mq_pro, "~> 0.6", runtime: false, targets: :mangopi_mq_pro},
       {:nerves_system_srhub, "~> 0.33", runtime: false, targets: :srhub},
-      {:nerves_hub_link, "~> 2.5"},
-      {:nerves_hub_cli, "~> 2.0"}
+      # {:nerves_hub_link, "~> 2.5"},
+      {:nerves_hub_link,
+       github: "lawik/nerves_hub_link", branch: "fix-consistently-bad-signed-at-time"},
+      {:nerves_hub_cli, "~> 2.0"},
+      {:req, "~> 0.5.6"},
+      {:multipart, "~> 0.4.0"}
     ]
   end
 
