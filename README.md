@@ -33,5 +33,4 @@ Success!
 Elapsed time: 3.595 s
 ```
 
-You may be able to log into the device via ssh and it's IP address or mDNS hostname if so, great. You can run `NervesHubLink.connected?` to check if it came online and joined its peers :)
-
+It is currently not practically possible to log in and check that it is working. I will consider adding a way to access the iex prompt from your end and checking on the thing :)
