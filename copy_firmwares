@@ -1,0 +1,25 @@
+#!/usr/bin/env elixir
+
+_key = System.fetch_env!("NH_KEY")
+_secret = System.fetch_env!("NH_SECRET")
+
+targets = [
+    "rpi0",
+    "rpi",
+    "rpi2",
+    "rpi3",
+    "rpi4",
+    "rpi5",
+    "grisp2",
+    "bbb",
+    "mangopi_mq_pro",
+    "osd32mp1",
+    "srhub",
+]
+
+[to_dir] = System.argv()
+
+targets
+|> Enum.map(fn target ->
+  File.cp!("_build/#{target}_dev/nerves/images/berlin2024.fw", Path.join(to_dir, "#{target}.fw"))
+end)

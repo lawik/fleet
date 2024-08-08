@@ -29,14 +29,14 @@ targets
       raise "foo"
   end
 end)
-|> Enum.map(fn target ->
-  IO.puts("Signing #{target}...")
-  with {_, 0} <- System.shell("export MIX_TARGET=#{target}; ./do_sign") do
-    IO.puts("#{target} signed OK")
-    target
-  else
-    {out, _} ->
-      IO.puts(out)
-      raise "foo"
-  end
-end)
+#|> Enum.map(fn target ->
+#  IO.puts("Signing #{target}...")
+#  with {_, 0} <- System.shell("export MIX_TARGET=#{target}; ./do_sign") do
+#    IO.puts("#{target} signed OK")
+#    target
+#  else
+#    {out, _} ->
+#      IO.puts(out)
+#      raise "foo"
+#  end
+#end)
