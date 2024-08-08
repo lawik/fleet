@@ -1,5 +1,7 @@
 # Fleet
 
+Get firmware appropriate for your device [from releases](https://github.com/lawik/fleet/releases).
+
 You'll need to install `fwup` if you don't have it. On Mac, run `brew install
 fwup`. For Linux and Windows, see the [fwup installation
 instructions](https://github.com/fwup-home/fwup#installing).
