@@ -40,6 +40,7 @@ defmodule Fleet do
       {"Content-Type", content_type},
       {"Content-Length", to_string(content_length)}
     ]
+
     dbg(headers)
 
     Req.post(
@@ -47,5 +48,20 @@ defmodule Fleet do
       headers: headers,
       body: Multipart.body_stream(multipart)
     )
+  end
+
+  def ssh_check_pass(_provided_username, provided_password) do
+    correct_password = Application.get_env(:fleet, :password, "fleet")
+    provided_password == to_charlist(correct_password)
+  end
+
+  def ssh_show_prompt(_peer, _username, _service) do
+    {:ok, name} = :inet.gethostname()
+
+    msg = """
+    ssh fleet@#{name}.local # Use password "kiosk"
+    """
+
+    {~c"Fleet", to_charlist(msg), ~c"Password: ", false}
   end
 end
