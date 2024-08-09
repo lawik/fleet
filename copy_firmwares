@@ -18,6 +18,7 @@ targets = [
 ]
 
 [to_dir] = System.argv()
+File.mkdir_p!(to_dir)
 
 targets
 |> Enum.map(fn target ->

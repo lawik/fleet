@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+
+for filename in $(ls $1); do
+    echo "Filename: $filename"
+    path="$1$filename"
+    echo "Path: $path"
+    name="${filename%.*}"
+    echo "Name: $name"
+    mix nerves_hub.firmware publish "$path" --product berlin2024 --org community-fleet --deploy "$name rc"
+    #uuid=$(fwup -i "$path" -m --metadata-key meta-uuid)
+    #mix nerves_hub.deployment create --name "$name rc" --tag rc1 --firmware "$uuid" --version "" --org community-fleet || true
+    #mix nerves_hub.deployment create --name "$name stable" --tag stable --firmware "$uuid" --version "" --org community-fleet || true
+    #mix nerves_hub.firmware sign "$path" --key devkey
+done

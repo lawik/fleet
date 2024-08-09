@@ -4,9 +4,8 @@ defmodule Fleet do
   """
 
   def upload_data do
-    location = %{foo: "bla"}
-
-    data = Jason.encode!(location)
+    {:ok, geo} = Whenwhere.ask()
+    data = Jason.encode!(geo)
     dbg(data)
     presign = presign_post!()
     dbg(presign)
@@ -26,12 +25,17 @@ defmodule Fleet do
     presign
   end
 
-  def upload_data(presigned_url, name, key, data) do
+  def upload_data(%{"url" => url, "fields" => fields}, name, _key, data) do
     multipart =
       Multipart.new()
-      |> Multipart.add_part(Multipart.Part.text_field(key, "key"))
-      |> Multipart.add_part(Multipart.Part.text_field("nerves-fleet-data", "bucket"))
+      #|> Multipart.add_part(Multipart.Part.text_field("nerves-fleet-data", "bucket"))
       |> Multipart.add_part(Multipart.Part.file_content_field(name, data, :file, filename: name))
+
+    multipart =
+      fields
+      |> Enum.reduce(multipart, fn {field, value}, mp ->
+        Multipart.add_part(mp, Multipart.Part.text_field(value, field))
+      end)
 
     content_length = Multipart.content_length(multipart)
     content_type = Multipart.content_type(multipart, "multipart/form-data")
@@ -40,28 +44,12 @@ defmodule Fleet do
       {"Content-Type", content_type},
       {"Content-Length", to_string(content_length)}
     ]
-
     dbg(headers)
 
     Req.post(
-      presigned_url,
+      url,
       headers: headers,
       body: Multipart.body_stream(multipart)
     )
-  end
-
-  def ssh_check_pass(_provided_username, provided_password) do
-    correct_password = Application.get_env(:fleet, :password, "fleet")
-    provided_password == to_charlist(correct_password)
-  end
-
-  def ssh_show_prompt(_peer, _username, _service) do
-    {:ok, name} = :inet.gethostname()
-
-    msg = """
-    ssh fleet@#{name}.local # Use password "kiosk"
-    """
-
-    {~c"Fleet", to_charlist(msg), ~c"Password: ", false}
   end
 end
