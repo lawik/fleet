@@ -33,4 +33,4 @@ Success!
 Elapsed time: 3.595 s
 ```
 
-It is currently not practically possible to log in and check that it is working. I will consider adding a way to access the iex prompt from your end and checking on the thing :)
+You can then log in by figuring out what hostname your device got, something like `nerves-ab12.local` or the IP address via your network tooling. You can use any username (it is ignored) and it should prompt for a password. Password is `fleet` by default. Once in IEx you can run `NervesHubLink.connected?` and get an answer as to whether you are online. It should connect pretty quickly on boot but it can initially be tripped up a bit by clock-timing and NTP.
