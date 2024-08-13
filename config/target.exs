@@ -95,6 +95,11 @@ config :nerves_hub_link,
 config :nerves_hub_cli,
   org: "community-fleet"
 
+config :nerves_hub_health,
+  metrics: %{
+    temperature: {Fleet, :temperature, []}
+  }
+
 # Import target specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 # Uncomment to use target specific configurations

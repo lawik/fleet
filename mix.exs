@@ -3,7 +3,7 @@ defmodule Fleet.MixProject do
 
   # @app :fleet
   @app :berlin2024
-  @version "0.1.7"
+  @version "0.1.8"
   @all_targets [
     :rpi,
     :rpi0,
@@ -76,8 +76,10 @@ defmodule Fleet.MixProject do
       {:nerves_system_mangopi_mq_pro, "~> 0.6", runtime: false, targets: :mangopi_mq_pro},
       {:nerves_system_srhub, "~> 0.33", runtime: false, targets: :srhub},
       # {:nerves_hub_link, "~> 2.5"},
-      {:nerves_hub_link, github: "lawik/nerves_hub_link", branch: "extension-pubsub"},
+      {:nerves_hub_link,
+       github: "lawik/nerves_hub_link", branch: "extension-pubsub", override: true},
       {:nerves_hub_link_geo, github: "nervescloud/nerves_hub_link_geo"},
+      {:nerves_hub_health, github: "nervescloud/nerves_hub_health"},
       {:nerves_hub_cli, "~> 2.0"},
       {:req, "~> 0.5.6"},
       {:multipart, "~> 0.4.0"}
