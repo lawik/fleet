@@ -1,6 +1,7 @@
 # Fleet
 
-Get firmware appropriate for your device [from releases](https://github.com/lawik/fleet/releases).
+Get the appropriate firmware for your device [from releases](https://github.com/lawik/fleet/releases).
+Please, refer to [Nerves 1.10 targets and systems](https://hexdocs.pm/nerves/1.10.5/supported-targets.html#supported-targets-and-systems) page to pick the appropriate release for your target device.
 
 You'll need to install `fwup` if you don't have it. On Mac, run `brew install
 fwup`. For Linux and Windows, see the [fwup installation
