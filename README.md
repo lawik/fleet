@@ -1,5 +1,11 @@
 # Fleet
 
+Help me (Lars, of [Underjord](https://underjord.io)) make a really cool talk happen at Code BEAM Berlin. Add your devices to the pool of volunteers for weirdness. Join the fleet.
+
+I promise to not do weird or creepy things with them.
+
+## Instructions
+
 Get the appropriate firmware for your device [from releases](https://github.com/lawik/fleet/releases).
 Please, refer to [Nerves 1.10 targets and systems](https://hexdocs.pm/nerves/1.10.5/supported-targets.html#supported-targets-and-systems) page to pick the appropriate release for your target device.
 
