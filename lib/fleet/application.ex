@@ -73,7 +73,6 @@ defmodule Fleet.Application do
     defp empty?(_), do: false
   end
 
-
   def target() do
     Application.get_env(:fleet, :target)
   end

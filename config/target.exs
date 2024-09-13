@@ -97,7 +97,10 @@ config :nerves_hub_cli,
 
 config :nerves_hub_health,
   metrics: %{
-    temperature: {Fleet, :temperature, []}
+    tasks: {Fleet, :tasks_executed, []}
+  },
+  metadata: %{
+    role: {Fleet, :role, []}
   }
 
 # Import target specific config. This must remain at the bottom

@@ -41,3 +41,16 @@ Elapsed time: 3.595 s
 ```
 
 You can then log in by figuring out what hostname your device got, something like `nerves-ab12.local` or the IP address via your network tooling. You can use any username (it is ignored) and it should prompt for a password. Password is `fleet` by default. Once in IEx you can run `NervesHubLink.connected?` and get an answer as to whether you are online. It should connect pretty quickly on boot but it can initially be tripped up a bit by clock-timing and NTP.
+
+## Sample ML workload
+
+```
+Nx.default_backend(EXLA.Backend)
+{:ok, whisper} = Bumblebee.load_model({:hf, "openai/whisper-small"})
+{:ok, featurizer} = Bumblebee.load_featurizer({:hf, "openai/whisper-small"})
+{:ok, tokenizer} = Bumblebee.load_tokenizer({:hf, "openai/whisper-small"})
+{:ok, generation_config} = Bumblebee.load_generation_config({:hf, "openai/whisper-small"})
+
+serving = Bumblebee.Audio.speech_to_text_whisper(whisper, featurizer, tokenizer, generation_config, defn_options: [compiler: EXLA], stream: true, timestamps: :segments)
+Nx.Serving.run(serving, {:file, "/root/test.mp3"}) |> Enum.map(fn chunk -> IO.inspect(chunk) end)
+```

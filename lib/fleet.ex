@@ -96,4 +96,10 @@ defmodule Fleet do
 
     {~c"Fleet", to_charlist(msg), ~c"Password: ", false}
   end
+
+  def tasks_executed, do: 0
+
+  def role do
+    "basic"
+  end
 end

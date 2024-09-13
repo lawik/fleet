@@ -3,7 +3,7 @@ defmodule Fleet.MixProject do
 
   # @app :fleet
   @app :berlin2024
-  @version "0.1.8"
+  @version "0.1.10-rc1"
   @all_targets [
     :rpi,
     :rpi0,
@@ -68,6 +68,13 @@ defmodule Fleet.MixProject do
       {:nerves_system_rpi3, "~> 1.24", runtime: false, targets: :rpi3},
       {:nerves_system_rpi3a, "~> 1.24", runtime: false, targets: :rpi3a},
       {:nerves_system_rpi4, "~> 1.24", runtime: false, targets: :rpi4},
+      # {
+      #   :nerves_system_rpi4,
+      #   # nerves: [compile: true],
+      #   path: "../../projects/nerves_systems/src/nerves_system_rpi4",
+      #   runtime: false,
+      #   targets: :rpi4
+      # },
       {:nerves_system_rpi5, "~> 0.3.0", runtime: false, targets: :rpi5},
       {:nerves_system_bbb, "~> 2.19", runtime: false, targets: :bbb},
       {:nerves_system_osd32mp1, "~> 0.15", runtime: false, targets: :osd32mp1},
@@ -82,7 +89,18 @@ defmodule Fleet.MixProject do
       {:nerves_hub_health, github: "nervescloud/nerves_hub_health"},
       {:nerves_hub_cli, "~> 2.0"},
       {:req, "~> 0.5.6"},
-      {:multipart, "~> 0.4.0"}
+      {:multipart, "~> 0.4.0"},
+      # {:membrane_core, "~> 1.1"},
+      # {:membrane_file_plugin, "~> 0.17.2"},
+      # {:membrane_mp3_mad_plugin, "~> 0.18.3"},
+      # {:membrane_ffmpeg_swresample_plugin, "~> 0.20.2"},
+      # {:bumblebee, "~> 0.5"},
+      # for axon
+      {:table_rex, "~> 4.0", override: true},
+      {:axon, github: "elixir-nx/axon", override: true, targets: [:rpi4, :rpi5]},
+      {:bumblebee, github: "elixir-nx/bumblebee", override: true, targets: [:rpi4, :rpi5]},
+      {:nx, "~> 0.7", targets: [:rpi4, :rpi5]},
+      {:exla, "~> 0.7", targets: [:rpi4, :rpi5]}
     ]
   end
 

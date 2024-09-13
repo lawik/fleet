@@ -24,11 +24,10 @@ config :nerves, :firmware,
   rootfs_overlay: "rootfs_overlay",
   provisioning: "config/provisioning.conf"
 
-#config :ex_aws, :s3,
+# config :ex_aws, :s3,
 #  scheme: "https://",
 #  host: "fly.storage.tigris.dev",
 #  port: 443
-
 
 if Mix.target() == :host do
   import_config "host.exs"
