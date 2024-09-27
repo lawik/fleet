@@ -5,7 +5,7 @@ defmodule Fleet do
 
   require Logger
 
-  @very_secret_weather_key "7E706N14OoTyCkLq3Ko5kF5YR9XTjE33"
+  alias ExAws.S3
 
   def upload_data do
     {:ok, geo} = Whenwhere.ask()
@@ -15,36 +15,18 @@ defmodule Fleet do
     upload_data(presign, "geo.json", "data/#{serial}/location.json", data)
   end
 
-  def weather do
-    {:ok, %{latitude: lat, longitude: lng}} = Whenwhere.ask()
-
-    {:ok,
-     %{
-       body: %{"data" => %{"values" => weather}}
-     }} =
-      Req.get(
-        "https://api.tomorrow.io/v4/weather/realtime?location=#{lat},#{lng}&apikey=#{@very_secret_weather_key}&units=metric"
-      )
-
-    weather
-  rescue
-    e ->
-      Logger.error("Weather fetch failed: #{inspect(e)}")
-      %{}
-  end
-
-  def temperature do
-    case Process.get(:weather, weather()) do
-      %{"temperature" => temp} ->
-        temp
-
-      _ ->
-        0.0
-    end
-  end
-
   @open_secret "ti2zRfSCr3ITpMU9ReghbGvsy8EOW+VbfAfy18oe59o="
-  def presign_post!() do
+  def claim_resource(key) do
+    put_data(key, "device-#{serial}")
+  end
+
+  def put_data(key, data) do
+    presign = presign_post!(key)
+
+    upload_data(presign, "claim.txt", key, data)
+  end
+
+  def presign_post! do
     serial = Nerves.Runtime.serial_number()
 
     {:ok, %{body: %{"presigned_upload" => presign}}} =
@@ -53,6 +35,34 @@ defmodule Fleet do
       )
 
     presign
+  end
+
+  def presign_post!(key) do
+    serial = Nerves.Runtime.serial_number()
+
+    {:ok, %{body: %{"presigned_upload" => presign}}} =
+      Req.post("https://fleet-sign.fly.dev/sign",
+        params: [key: key],
+        json: %{"secret" => @open_secret, "serial_number" => serial}
+      )
+
+    presign
+  end
+
+  defp bucket, do: "nerves-fleet-data"
+
+  def get_data(key) do
+    Req.get("https://fly.storage.tigris.dev/#{bucket()}/shared/#{key}")
+  end
+
+  def claimed?(key) do
+    case get_data(key) do
+      {:ok, %{status: 200}} ->
+        true
+
+      {:ok, %{status: 404}} ->
+        false
+    end
   end
 
   def upload_data(%{"url" => url, "fields" => fields}, name, _key, data) do
@@ -82,8 +92,36 @@ defmodule Fleet do
     )
   end
 
+  def upload_if_missing(%{"url" => url, "fields" => fields}, name, _key, data) do
+    multipart =
+      Multipart.new()
+      # |> Multipart.add_part(Multipart.Part.text_field("nerves-fleet-data", "bucket"))
+      |> Multipart.add_part(Multipart.Part.file_content_field(name, data, :file, filename: name))
+
+    multipart =
+      fields
+      |> Enum.reduce(multipart, fn {field, value}, mp ->
+        Multipart.add_part(mp, Multipart.Part.text_field(value, field))
+      end)
+
+    content_length = Multipart.content_length(multipart)
+    content_type = Multipart.content_type(multipart, "multipart/form-data")
+
+    headers = [
+      {"Content-Type", content_type},
+      {"Content-Length", to_string(content_length)},
+      {"If-Match", "foo"}
+    ]
+
+    Req.post(
+      url,
+      headers: headers,
+      body: Multipart.body_stream(multipart)
+    )
+  end
+
   def ssh_check_pass(_provided_username, provided_password) do
-    correct_password = Application.get_env(:fleet, :password, "fleet")
+    correct_password = Application.get_env(:berlin2024, :password, "fleet")
     provided_password == to_charlist(correct_password)
   end
 
@@ -99,7 +137,28 @@ defmodule Fleet do
 
   def tasks_executed, do: 0
 
+  # 4.1Gb so let's say 4.5
+  @space_for_podcast_index_kb 4.5 * 1024 * 1024
+  @target Mix.target()
   def role do
-    "basic"
+    case @target do
+      :host ->
+        :databaser
+
+      :rpi4 ->
+        :transcripter
+
+      :rpi5 ->
+        :transcripter
+
+      _ ->
+        [{_, _total, available_kb, _percent_used}] = :disksup.get_disk_info(~c"/data")
+
+        if available_kb > @space_for_podcast_index_kb do
+          :databaser
+        else
+          :parser
+        end
+    end
   end
 end

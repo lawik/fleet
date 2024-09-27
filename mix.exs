@@ -37,7 +37,7 @@ defmodule Fleet.MixProject do
   def application do
     [
       mod: {Fleet.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :os_mon]
     ]
   end
 
@@ -97,10 +97,15 @@ defmodule Fleet.MixProject do
       # {:bumblebee, "~> 0.5"},
       # for axon
       {:table_rex, "~> 4.0", override: true},
-      {:axon, github: "elixir-nx/axon", override: true, targets: [:rpi4, :rpi5]},
-      {:bumblebee, github: "elixir-nx/bumblebee", override: true, targets: [:rpi4, :rpi5]},
-      {:nx, "~> 0.7", targets: [:rpi4, :rpi5]},
-      {:exla, "~> 0.7", targets: [:rpi4, :rpi5]}
+      {:axon, github: "elixir-nx/axon", override: true, targets: [:rpi4, :rpi5, :host]},
+      {:bumblebee, github: "elixir-nx/bumblebee", override: true, targets: [:rpi4, :rpi5, :host]},
+      {:nx, "~> 0.7", targets: [:rpi4, :rpi5, :host]},
+      {:exla, "~> 0.7", targets: [:rpi4, :rpi5, :host]},
+      {:exqlite, "~> 0.24.2"},
+      {:ex_aws, "~> 2.5"},
+      {:ex_aws_s3, "~> 2.5"},
+      {:hackney, "~> 1.9"},
+      {:sweet_xml, "~> 0.7"}
     ]
   end
 

@@ -17,26 +17,28 @@ defmodule Fleet.Application do
         # Children for all targets
         # Starts a worker by calling: Fleet.Worker.start_link(arg)
         # {Fleet.Worker, arg},
-      ] ++ children(target())
+      ] ++ children(target(), Fleet.role())
+
+    dbg(children)
 
     Supervisor.start_link(children, opts)
   end
 
   # List all child processes to be supervised
-  def children(:host) do
-    [
-      # Children that only run on the host
-      # Starts a worker by calling: Fleet.Worker.start_link(arg)
-      # {Fleet.Worker, arg},
-    ]
+  def children(:host, :databaser) do
+    [{Fleet.Databaser, path: "/tmp/podcast-index.sqlite"}]
   end
 
-  def children(_target) do
-    [
-      # Children for all targets except host
-      # Starts a worker by calling: Fleet.Worker.start_link(arg)
-      # {Fleet.Worker, arg},
-    ]
+  def children(_target, :transcripter) do
+    [Fleet.Transcriber]
+  end
+
+  def children(_target, :databaser) do
+    [Fleet.Databaser]
+  end
+
+  def children(_target, :parser) do
+    [Fleet.Parser]
   end
 
   if Mix.target() == :host do
@@ -74,6 +76,6 @@ defmodule Fleet.Application do
   end
 
   def target() do
-    Application.get_env(:fleet, :target)
+    Application.get_env(:berlin2024, :target)
   end
 end
