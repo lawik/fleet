@@ -17,6 +17,7 @@ defmodule Fleet do
 
   @open_secret "ti2zRfSCr3ITpMU9ReghbGvsy8EOW+VbfAfy18oe59o="
   def claim_resource(key) do
+    serial = Nerves.Runtime.serial_number()
     put_data(key, "device-#{serial}")
   end
 
