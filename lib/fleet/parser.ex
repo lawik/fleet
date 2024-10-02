@@ -64,6 +64,8 @@ defmodule Fleet.Parser do
                 end
               end)
 
+              Fleet.put_data("podcasts/#{id}/parser-done.txt", Nerves.Runtime.serial_number())
+
             other ->
               Logger.info(
                 "Feed parsing failed. Could be any reason, we just skip: #{inspect(other)}"

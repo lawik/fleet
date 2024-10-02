@@ -19,8 +19,6 @@ defmodule Fleet.Application do
         # {Fleet.Worker, arg},
       ] ++ children(target(), Fleet.role())
 
-    dbg(children)
-
     Supervisor.start_link(children, opts)
   end
 
@@ -31,6 +29,10 @@ defmodule Fleet.Application do
 
   def children(:host, :parser) do
     [Fleet.Parser]
+  end
+
+  def children(:host, :transcripter) do
+    [{Fleet.Transcripter, scratch_file: "/tmp/scratch.mp3"}]
   end
 
   def children(_target, :transcripter) do

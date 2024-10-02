@@ -191,7 +191,7 @@ defmodule Fleet do
   def role do
     case @target do
       :host ->
-        :parser
+        :transcripter
 
       :rpi4 ->
         :transcripter
