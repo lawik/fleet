@@ -106,7 +106,9 @@ defmodule Fleet.MixProject do
       {:ex_aws_s3, "~> 2.5"},
       {:hackney, "~> 1.9"},
       {:sweet_xml, "~> 0.7"},
-      {:feeder, github: "lawik/feeder"}
+      {:feeder_ex, "~> 1.1"},
+      {:feeder, "~> 2.3", manager: :rebar3, override: true},
+      {:timex, "~> 3.7"}
     ]
   end
 

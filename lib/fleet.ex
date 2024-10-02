@@ -6,7 +6,7 @@ defmodule Fleet do
   require Logger
   import SweetXml
 
-#  alias ExAws.S3
+  #  alias ExAws.S3
 
   def upload_data do
     {:ok, geo} = Whenwhere.ask()
@@ -17,9 +17,6 @@ defmodule Fleet do
   end
 
   @open_secret "ti2zRfSCr3ITpMU9ReghbGvsy8EOW+VbfAfy18oe59o="
-  @spec claim_resource(any()) ::
-          {:error, %{:__exception__ => true, :__struct__ => atom(), optional(atom()) => any()}}
-          | {:ok, Req.Response.t()}
   def claim_resource(key) do
     serial = Nerves.Runtime.serial_number()
     put_data(key, "device-#{serial}")
@@ -68,14 +65,42 @@ defmodule Fleet do
 
   defp bucket, do: "nerves-fleet-data"
 
+  def episode_id_hash(episode_id) do
+    :crypto.hash(:sha, episode_id)
+    |> Base.encode16()
+  end
+
   def get_data(key) do
-    Req.get("https://fly.storage.tigris.dev/#{bucket()}/shared/#{key}" |> dbg())
+    Req.get("https://fly.storage.tigris.dev/#{bucket()}/shared/#{key}")
+  end
+
+  def list_keys_from_oldest!(prefix, offset) do
+    Req.get!("https://fly.storage.tigris.dev/#{bucket()}",
+      params: %{
+        "list-type" => 2,
+        "prefix" => "shared/#{prefix}"
+      },
+      headers: %{
+        "X-Tigris-Query" => "`Last-Modified` > \"#{offset}\" ORDER BY \`Last-Modified\` ASC"
+      }
+    )
+    |> Map.fetch!(:body)
+    |> SweetXml.xpath(~x"//ListBucketResult/Contents/Key/text()"l)
+    |> Enum.map(&to_string/1)
+    |> Enum.map(&String.replace_leading(&1, "shared/", ""))
   end
 
   def list_keys!(prefix) do
-    Req.get!("https://fly.storage.tigris.dev/#{bucket()}", params: %{"list-type" => 2, "prefix" => "shared/#{prefix}"})
+    Req.get!("https://fly.storage.tigris.dev/#{bucket()}",
+      params: %{
+        "list-type" => 2,
+        "prefix" => "shared/#{prefix}"
+      }
+    )
     |> Map.fetch!(:body)
     |> SweetXml.xpath(~x"//ListBucketResult/Contents/Key/text()"l)
+    |> Enum.map(&to_string/1)
+    |> Enum.map(&String.replace_leading(&1, "shared/", ""))
   end
 
   def claimed?(key) do
