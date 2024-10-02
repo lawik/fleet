@@ -29,6 +29,10 @@ defmodule Fleet.Application do
     [{Fleet.Databaser, path: "/tmp/podcast-index.sqlite"}]
   end
 
+  def children(:host, :parser) do
+    [Fleet.Parser]
+  end
+
   def children(_target, :transcripter) do
     [Fleet.Transcriber]
   end

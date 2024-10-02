@@ -4,8 +4,9 @@ defmodule Fleet do
   """
 
   require Logger
+  import SweetXml
 
-  alias ExAws.S3
+#  alias ExAws.S3
 
   def upload_data do
     {:ok, geo} = Whenwhere.ask()
@@ -16,6 +17,9 @@ defmodule Fleet do
   end
 
   @open_secret "ti2zRfSCr3ITpMU9ReghbGvsy8EOW+VbfAfy18oe59o="
+  @spec claim_resource(any()) ::
+          {:error, %{:__exception__ => true, :__struct__ => atom(), optional(atom()) => any()}}
+          | {:ok, Req.Response.t()}
   def claim_resource(key) do
     serial = Nerves.Runtime.serial_number()
     put_data(key, "device-#{serial}")
@@ -24,7 +28,7 @@ defmodule Fleet do
   def put_data(key, data) do
     presign = presign_post!(key)
 
-    upload_data(presign, "claim.txt", key, data)
+    upload_data(presign, "any-filename", key, data)
   end
 
   def presign_post! do
@@ -32,7 +36,7 @@ defmodule Fleet do
 
     {:ok, %{body: %{"presigned_upload" => presign}}} =
       Req.post("https://fleet-sign.fly.dev/sign",
-        json: %{"secret" => @open_secret, "serial_number" => serial}
+        json: %{"secret" => @open_secret, "serial_number" => serial, "method" => "post"}
       )
 
     presign
@@ -44,7 +48,19 @@ defmodule Fleet do
     {:ok, %{body: %{"presigned_upload" => presign}}} =
       Req.post("https://fleet-sign.fly.dev/sign",
         params: [key: key],
-        json: %{"secret" => @open_secret, "serial_number" => serial}
+        json: %{"secret" => @open_secret, "serial_number" => serial, "method" => "post"}
+      )
+
+    presign
+  end
+
+  def presign_get!(key) do
+    serial = Nerves.Runtime.serial_number()
+
+    {:ok, %{body: %{"presigned_upload" => presign}}} =
+      Req.post("https://fleet-sign.fly.dev/sign",
+        params: [key: key],
+        json: %{"secret" => @open_secret, "serial_number" => serial, "method" => "get"}
       )
 
     presign
@@ -53,7 +69,13 @@ defmodule Fleet do
   defp bucket, do: "nerves-fleet-data"
 
   def get_data(key) do
-    Req.get("https://fly.storage.tigris.dev/#{bucket()}/shared/#{key}")
+    Req.get("https://fly.storage.tigris.dev/#{bucket()}/shared/#{key}" |> dbg())
+  end
+
+  def list_keys!(prefix) do
+    Req.get!("https://fly.storage.tigris.dev/#{bucket()}", params: %{"list-type" => 2, "prefix" => "shared/#{prefix}"})
+    |> Map.fetch!(:body)
+    |> SweetXml.xpath(~x"//ListBucketResult/Contents/Key/text()"l)
   end
 
   def claimed?(key) do
@@ -144,7 +166,7 @@ defmodule Fleet do
   def role do
     case @target do
       :host ->
-        :databaser
+        :parser
 
       :rpi4 ->
         :transcripter
@@ -161,5 +183,9 @@ defmodule Fleet do
           :parser
         end
     end
+  end
+
+  def swoosh do
+    :math.sin(System.system_time(:second))
   end
 end

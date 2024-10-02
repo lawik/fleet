@@ -3,7 +3,7 @@ defmodule Fleet.MixProject do
 
   # @app :fleet
   @app :berlin2024
-  @version "0.1.11-meetup-test-1"
+  @version "0.1.14"
   @all_targets [
     :rpi,
     :rpi0,
@@ -105,7 +105,8 @@ defmodule Fleet.MixProject do
       {:ex_aws, "~> 2.5"},
       {:ex_aws_s3, "~> 2.5"},
       {:hackney, "~> 1.9"},
-      {:sweet_xml, "~> 0.7"}
+      {:sweet_xml, "~> 0.7"},
+      {:feeder, github: "lawik/feeder"}
     ]
   end
 
