@@ -114,9 +114,6 @@ defmodule Fleet.Parser do
       last_modified =
         Timex.parse!(hd(headers["last-modified"]), "{RFC1123}") |> Timex.format!("{RFC3339}")
 
-      dbg(dirname)
-      dbg(neighbors)
-
       if marker not in neighbors do
         Logger.info("No start marker for: #{key}")
         # Mark it as started
