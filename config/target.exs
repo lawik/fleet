@@ -82,6 +82,8 @@ config :mdns_lite,
     }
   ]
 
+config :tzdata, :data_dir, "/root/elixir_tzdata_data"
+
 config :nerves_hub_link,
   device_api_host: "devices.nervescloud.com",
   remote_iex: true,
