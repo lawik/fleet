@@ -213,8 +213,4 @@ defmodule Fleet do
         end
     end
   end
-
-  def swoosh do
-    :math.sin(System.system_time(:second))
-  end
 end
