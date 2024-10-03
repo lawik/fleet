@@ -200,7 +200,11 @@ defmodule Fleet do
         :transcripter
 
       _ ->
-        [{_, _total, available_kb, _percent_used}] = :disksup.get_disk_info(~c"/data")
+        {_, _total, available_kb, _percent_used} =
+          :disksup.get_disk_info()
+          |> Enum.find(fn {name, _, _, _} ->
+            name == ~c"/root"
+          end)
 
         if available_kb > @space_for_podcast_index_kb do
           :databaser
