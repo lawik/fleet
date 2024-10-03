@@ -49,14 +49,13 @@ defmodule Fleet.Databaser do
     Logger.info("Getting podcasts english language tech podcasts starting at ID: #{latest_id}")
 
     podcasts =
-     state.conn
-     |> get_english_tech_podcasts(latest_id, @limit)
+      state.conn
+      |> get_english_tech_podcasts(latest_id, @limit)
 
     Logger.info("Got #{Enum.count(podcasts)} english language tech podcasts.")
 
     if podcasts != %{} do
-      %{"id" => max_id} = Enum.max_by(podcasts, & Map.get(&1, "id", 0))
-
+      %{"id" => max_id} = Enum.max_by(podcasts, &Map.get(&1, "id", 0))
 
       podcasts
       |> Enum.each(fn pod ->
@@ -66,6 +65,7 @@ defmodule Fleet.Databaser do
 
       # weak control, is fine
       latest_id = fetch_latest()
+
       if max_id > latest_id do
         Logger.info("Setting new latest fetch id: #{max_id}")
         put_latest(max_id)
@@ -121,7 +121,6 @@ defmodule Fleet.Databaser do
       conn
       |> DB.exec(query, [latest_id, limit])
       |> DB.rows()
-
 
     Enum.map(rows, fn row ->
       Enum.zip(keys, row)

@@ -36,7 +36,7 @@ defmodule Fleet.Application do
   end
 
   def children(_target, :transcripter) do
-    [Fleet.Transcriber]
+    [Fleet.Transcripter]
   end
 
   def children(_target, :databaser) do

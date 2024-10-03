@@ -9,8 +9,6 @@ targets = [
     "rpi2",
     "rpi3",
     "rpi3a",
-    "rpi4",
-    "rpi5",
     "grisp2",
     "bbb",
     "mangopi_mq_pro",
@@ -18,21 +16,13 @@ targets = [
     "srhub",
 ]
 
-custom = [
-  "rpi4",
-  "rpi5"
-]
-
 targets
 |> Enum.map(fn target ->
   IO.puts("Building #{target}...")
-  source =
-    if target in custom do
-      "source /home/lawik/projects/nerves_systems/o/#{target}/nerves-env.sh;"
-    else
-      ""
-    end
-  with {_, 0} <- System.shell("export XLA_TARGET_PLATFORM=\"aarch64-linux-gnu\"; export MIX_TARGET=#{target}; #{source} ./do_build") do
+  with {_, 0} <- System.shell("""
+    export MIX_TARGET=#{target}; \
+    ./do_build
+    """) do
     IO.puts("#{target} built OK")
     target
   else
@@ -41,6 +31,8 @@ targets
       raise "foo"
   end
 end)
+
+System.shell("./_build_custom")
 #|> Enum.map(fn target ->
 #  IO.puts("Signing #{target}...")
 #  with {_, 0} <- System.shell("export MIX_TARGET=#{target}; ./do_sign") do
