@@ -28,11 +28,11 @@ targets
   IO.puts("Building #{target}...")
   source =
     if target in custom do
-      "source /home/lawik/projects/nerves_systems/o/#{target}/nerves-env.sh"
+      "source /home/lawik/projects/nerves_systems/o/#{target}/nerves-env.sh;"
     else
       ""
     end
-  with {_, 0} <- System.shell("export XLA_TARGET_PLATFORM=\"aarch64-linux-gnu\"; export MIX_TARGET=#{target}; #{source}; ./do_build") do
+  with {_, 0} <- System.shell("export XLA_TARGET_PLATFORM=\"aarch64-linux-gnu\"; export MIX_TARGET=#{target}; #{source} ./do_build") do
     IO.puts("#{target} built OK")
     target
   else
