@@ -87,7 +87,6 @@ config :tzdata, :data_dir, "/root/elixir_tzdata_data"
 config :nerves_hub_link,
   device_api_host: "devices.nervescloud.com",
   remote_iex: true,
-  fwup_public_keys: ["ti2zRfSCr3ITpMU9ReghbGvsy8EOW+VbfAfy18oe59o="],
   org_name: "community-fleet",
   shared_secret: [
     product_key: System.fetch_env!("NH_KEY"),
