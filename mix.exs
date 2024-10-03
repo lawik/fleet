@@ -3,7 +3,7 @@ defmodule Fleet.MixProject do
 
   # @app :fleet
   @app :berlin2024
-  @version "0.2.0-rc1"
+  @version "0.2.0-rc3"
   @all_targets [
     :rpi,
     :rpi0,
