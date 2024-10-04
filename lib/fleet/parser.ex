@@ -83,6 +83,11 @@ defmodule Fleet.Parser do
     send(self(), :run)
 
     {:noreply, %{state | offset: offset}}
+  rescue
+    _ ->
+      :timer.sleep(5000)
+      send(self(), :run)
+      {:noreply, state}
   end
 
   defp get_next_meta!(offset) do

@@ -20,8 +20,15 @@ defmodule Fleet.Databaser do
   def handle_continue(:setup, state) do
     state =
       case File.stat(state.path) do
-        {:ok, _} ->
+        {:ok, %{size: size}} when size > 0 ->
           Logger.info("Database already exists at: #{state.path}")
+          {:ok, conn} = DB.open(state.path)
+          %{state | ready?: true, conn: conn}
+
+        {:ok, %{size: 0}} ->
+          Logger.info("Found empty file. Starting download over from: #{@url}")
+          Req.get!(@url, into: File.stream!(state.path))
+          Logger.info("Downloaded successfully to: #{state.path}")
           {:ok, conn} = DB.open(state.path)
           %{state | ready?: true, conn: conn}
 
@@ -41,18 +48,22 @@ defmodule Fleet.Databaser do
       end
 
     {:noreply, state, {:continue, :run}}
+  rescue
+    _ ->
+      :timer.sleep(5000)
+      {:noreply, state, {:continue, :setup}}
   end
 
   @limit 100
   def handle_continue(:run, state) do
     latest_id = fetch_latest()
-    Logger.info("Getting podcasts english language tech podcasts starting at ID: #{latest_id}")
+    Logger.info("Getting podcasts starting at ID: #{latest_id}")
 
     podcasts =
       state.conn
-      |> get_english_tech_podcasts(latest_id, @limit)
+      |> get_podcasts(latest_id, @limit)
 
-    Logger.info("Got #{Enum.count(podcasts)} english language tech podcasts.")
+    Logger.info("Got #{Enum.count(podcasts)} podcasts.")
 
     if podcasts != %{} do
       %{"id" => max_id} = Enum.max_by(podcasts, &Map.get(&1, "id", 0))
@@ -113,6 +124,36 @@ defmodule Fleet.Databaser do
         substr(cat,1,2) = 'en'
         and
         category1 = 'technology'
+      order by id asc
+      limit ?
+    """
+
+    {:ok, rows, keys} =
+      conn
+      |> DB.exec(query, [latest_id, limit])
+      |> DB.rows()
+
+    Enum.map(rows, fn row ->
+      Enum.zip(keys, row)
+      |> Map.new()
+    end)
+  end
+
+  defp get_podcasts(conn, latest_id, limit) do
+    query = """
+      select
+        id,
+        url,
+        title,
+        language collate nocase as cat
+      from
+        podcasts
+      where
+        id > ?
+        and
+        dead = 0
+        and
+        substr(cat,1,2) = 'en'
       order by id asc
       limit ?
     """

@@ -3,6 +3,6 @@
 for filename in $(ls $1); do
     path="$1$filename"
     echo "$path"
-    mix nerves_hub.firmware sign "$path" --key devkey --org community-fleet
-    #fwup --sign -s .stash/fwup-key.priv -i "$path" -o "$path"
+    #mix nerves_hub.firmware sign "$path" --key devkey --org community-fleet
+    fwup --sign -s .stash/fwup-key.priv -i "$path" -o "$path"
 done

@@ -42,6 +42,10 @@ if Mix.target() in [:host, :rpi4, :rpi5] do
       send(self(), :run)
 
       {:noreply, %{state | serving: serving}}
+    rescue
+      _ ->
+        :timer.sleep(5000)
+        {:noreply, state, {:continue, :setup}}
     end
 
     def handle_info(:run, state) do
