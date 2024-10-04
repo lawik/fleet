@@ -2,10 +2,10 @@
 
 echo "export MIX_TARGET=rpi4"
 echo "export XLA_TARGET_PLATFORM=\"aarch64-linux-gnu\""
-echo "source /home/lawik/projects/nerves_systems/o/$MIX_TARGET/nerves-env.sh"
+echo "source /home/lawik/projects/nerves_systems/o/rpi4/nerves-env.sh"
 echo "./do_build"
 
 echo "export MIX_TARGET=rpi5"
 echo "export XLA_TARGET_PLATFORM=\"aarch64-linux-gnu\""
-echo "source /home/lawik/projects/nerves_systems/o/$MIX_TARGET/nerves-env.sh"
+echo "source /home/lawik/projects/nerves_systems/o/rpi5/nerves-env.sh"
 echo "./do_build"
