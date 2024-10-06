@@ -14,10 +14,11 @@ defmodule Fleet.Databaser do
   def init(opts) do
     state = %{ready?: false, conn: nil, path: Keyword.get(opts, :path, @path)}
     Logger.info("Starting database worker...")
-    {:ok, state, {:continue, :setup}}
+    send(self(), :setup)
+    {:ok, state}
   end
 
-  def handle_continue(:setup, state) do
+  def handle_info(:setup, state) do
     state =
       case File.stat(state.path) do
         {:ok, %{size: size}} when size > 0 ->
@@ -47,15 +48,16 @@ defmodule Fleet.Databaser do
           %{state | ready?: false}
       end
 
-    {:noreply, state, {:continue, :run}}
+    send(self(), :run)
+    {:noreply, state}
   rescue
     _ ->
-      :timer.sleep(5000)
-      {:noreply, state, {:continue, :setup}}
+      Process.send_after(self(), :setup, 5000)
+      {:noreply, state}
   end
 
   @limit 100
-  def handle_continue(:run, state) do
+  def handle_info(:run, state) do
     latest_id = fetch_latest()
     Logger.info("Getting podcasts starting at ID: #{latest_id}")
 
@@ -86,7 +88,8 @@ defmodule Fleet.Databaser do
       :timer.sleep(30_000)
     end
 
-    {:noreply, state, {:continue, :run}}
+    send(self(), :run)
+    {:noreply, state}
   end
 
   defp fetch_latest do
@@ -107,37 +110,37 @@ defmodule Fleet.Databaser do
     Fleet.put_data("podcasts/#{pod["id"]}/meta.json", Jason.encode!(pod))
   end
 
-  defp get_english_tech_podcasts(conn, latest_id, limit) do
-    query = """
-      select
-        id,
-        url,
-        title,
-        language collate nocase as cat
-      from
-        podcasts
-      where
-        id > ?
-        and
-        dead = 0
-        and
-        substr(cat,1,2) = 'en'
-        and
-        category1 = 'technology'
-      order by id asc
-      limit ?
-    """
+  # defp get_english_tech_podcasts(conn, latest_id, limit) do
+  #   query = """
+  #     select
+  #       id,
+  #       url,
+  #       title,
+  #       language collate nocase as cat
+  #     from
+  #       podcasts
+  #     where
+  #       id > ?
+  #       and
+  #       dead = 0
+  #       and
+  #       substr(cat,1,2) = 'en'
+  #       and
+  #       category1 = 'technology'
+  #     order by id asc
+  #     limit ?
+  #   """
 
-    {:ok, rows, keys} =
-      conn
-      |> DB.exec(query, [latest_id, limit])
-      |> DB.rows()
+  #   {:ok, rows, keys} =
+  #     conn
+  #     |> DB.exec(query, [latest_id, limit])
+  #     |> DB.rows()
 
-    Enum.map(rows, fn row ->
-      Enum.zip(keys, row)
-      |> Map.new()
-    end)
-  end
+  #   Enum.map(rows, fn row ->
+  #     Enum.zip(keys, row)
+  #     |> Map.new()
+  #   end)
+  # end
 
   defp get_podcasts(conn, latest_id, limit) do
     query = """

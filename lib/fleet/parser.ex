@@ -85,8 +85,7 @@ defmodule Fleet.Parser do
     {:noreply, %{state | offset: offset}}
   rescue
     _ ->
-      :timer.sleep(5000)
-      send(self(), :run)
+      Process.send_after(self(), :run, 5000)
       {:noreply, state}
   end
 

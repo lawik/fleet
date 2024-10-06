@@ -17,35 +17,43 @@ if Mix.target() in [:host, :rpi4, :rpi5] do
         |> Timex.parse!("{RFC1123}")
         |> Timex.format!("{RFC3339}")
 
+      send(self(), :setup)
+
       {:ok,
        %{
          serving: nil,
          offset: offset,
          scratch_file: Keyword.get(opts, :scratch_file, "/data/scratch.mp3")
-       }, {:continue, :setup}}
+       }}
     end
 
-    def handle_continue(:setup, state) do
-      Nx.default_backend(EXLA.Backend)
-      {:ok, whisper} = Bumblebee.load_model({:hf, "openai/whisper-small"})
-      {:ok, featurizer} = Bumblebee.load_featurizer({:hf, "openai/whisper-small"})
-      {:ok, tokenizer} = Bumblebee.load_tokenizer({:hf, "openai/whisper-small"})
-      {:ok, generation_config} = Bumblebee.load_generation_config({:hf, "openai/whisper-small"})
+    def handle_info(:setup, state) do
+      try do
+        Nx.default_backend(EXLA.Backend)
+        {:ok, whisper} = Bumblebee.load_model({:hf, "openai/whisper-small"})
+        {:ok, featurizer} = Bumblebee.load_featurizer({:hf, "openai/whisper-small"})
+        {:ok, tokenizer} = Bumblebee.load_tokenizer({:hf, "openai/whisper-small"})
+        {:ok, generation_config} = Bumblebee.load_generation_config({:hf, "openai/whisper-small"})
 
-      serving =
-        Bumblebee.Audio.speech_to_text_whisper(whisper, featurizer, tokenizer, generation_config,
-          defn_options: [compiler: EXLA],
-          stream: true,
-          timestamps: :segments
-        )
+        serving =
+          Bumblebee.Audio.speech_to_text_whisper(
+            whisper,
+            featurizer,
+            tokenizer,
+            generation_config,
+            defn_options: [compiler: EXLA],
+            stream: true,
+            timestamps: :segments
+          )
 
-      send(self(), :run)
+        send(self(), :run)
 
-      {:noreply, %{state | serving: serving}}
-    rescue
-      _ ->
-        :timer.sleep(5000)
-        {:noreply, state, {:continue, :setup}}
+        {:noreply, %{state | serving: serving}}
+      rescue
+        _ ->
+          Process.send_after(self(), :setup, 5000)
+          {:noreply, state}
+      end
     end
 
     def handle_info(:run, state) do
