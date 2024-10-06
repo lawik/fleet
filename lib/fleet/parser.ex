@@ -21,72 +21,74 @@ defmodule Fleet.Parser do
   end
 
   def handle_info(:run, state) do
-    Logger.info("Fetching feeds from #{state.offset}")
-    {feed, offset} = get_next_meta!(state.offset)
+    try do
+      Logger.info("Fetching feeds from #{state.offset}")
+      {feed, offset} = get_next_meta!(state.offset)
 
-    # Deal with feed
-    if feed do
-      %{"id" => id, "url" => url, "title" => title} = feed
+      # Deal with feed
+      if feed do
+        %{"id" => id, "url" => url, "title" => title} = feed
 
-      case Req.get(url) do
-        {:ok, %{status: status, body: body}} when status < 400 ->
-          Logger.info("Fetched RSS feed with status: #{status}")
+        case Req.get(url) do
+          {:ok, %{status: status, body: body}} when status < 400 ->
+            Logger.info("Fetched RSS feed with status: #{status}")
 
-          case FeederEx.parse(body) do
-            {:ok, feed, _} ->
-              Logger.info("Parsed RSS feed OK. Entries: #{Enum.count(feed.entries)}")
+            case FeederEx.parse(body) do
+              {:ok, feed, _} ->
+                Logger.info("Parsed RSS feed OK. Entries: #{Enum.count(feed.entries)}")
 
-              feed.entries
-              |> Enum.sort_by(
-                fn entry ->
-                  Timex.parse!(entry.updated, "{RFC1123}")
-                end,
-                {:asc, DateTime}
-              )
-              |> Enum.map(fn entry ->
-                hash_id = Fleet.episode_id_hash(entry.id)
-                Logger.info("Episode ID #{entry.id} hashed to #{hash_id}")
+                feed.entries
+                |> Enum.sort_by(
+                  fn entry ->
+                    Timex.parse!(entry.updated, "{RFC1123}")
+                  end,
+                  {:asc, DateTime}
+                )
+                |> Enum.map(fn entry ->
+                  hash_id = Fleet.episode_id_hash(entry.id)
+                  Logger.info("Episode ID #{entry.id} hashed to #{hash_id}")
 
-                if entry.enclosure do
-                  enclosure = Map.from_struct(entry.enclosure)
+                  if entry.enclosure do
+                    enclosure = Map.from_struct(entry.enclosure)
 
-                  data =
-                    entry
-                    |> Map.from_struct()
-                    |> Map.put(:enclosure, enclosure)
-                    |> Jason.encode!()
+                    data =
+                      entry
+                      |> Map.from_struct()
+                      |> Map.put(:enclosure, enclosure)
+                      |> Jason.encode!()
 
-                  Fleet.put_data("podcasts/#{id}/episodes/#{hash_id}/entry.json", data)
-                else
-                  Logger.info("No enclosure, skipping episode: #{hash_id}")
-                end
-              end)
+                    Fleet.put_data("podcasts/#{id}/episodes/#{hash_id}/entry.json", data)
+                  else
+                    Logger.info("No enclosure, skipping episode: #{hash_id}")
+                  end
+                end)
 
-              Fleet.put_data("podcasts/#{id}/parser-done.txt", Nerves.Runtime.serial_number())
+                Fleet.put_data("podcasts/#{id}/parser-done.txt", Nerves.Runtime.serial_number())
 
-            other ->
-              Logger.info(
-                "Feed parsing failed. Could be any reason, we just skip: #{inspect(other)}"
-              )
-          end
+              other ->
+                Logger.info(
+                  "Feed parsing failed. Could be any reason, we just skip: #{inspect(other)}"
+                )
+            end
 
-        {:ok, %{status: status}} ->
-          Logger.error(
-            "Failed to get RSS feed for ID #{id} (#{title}), status: #{inspect(status)}"
-          )
+          {:ok, %{status: status}} ->
+            Logger.error(
+              "Failed to get RSS feed for ID #{id} (#{title}), status: #{inspect(status)}"
+            )
 
-        {:error, err} ->
-          Logger.error("Failed to get RSS feed for ID #{id} (#{title}), error: #{inspect(err)}")
+          {:error, err} ->
+            Logger.error("Failed to get RSS feed for ID #{id} (#{title}), error: #{inspect(err)}")
+        end
       end
+
+      send(self(), :run)
+
+      {:noreply, %{state | offset: offset}}
+    rescue
+      _ ->
+        Process.send_after(self(), :run, 5000)
+        {:noreply, state}
     end
-
-    send(self(), :run)
-
-    {:noreply, %{state | offset: offset}}
-  rescue
-    _ ->
-      Process.send_after(self(), :run, 5000)
-      {:noreply, state}
   end
 
   defp get_next_meta!(offset) do

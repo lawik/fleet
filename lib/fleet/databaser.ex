@@ -58,38 +58,44 @@ defmodule Fleet.Databaser do
 
   @limit 100
   def handle_info(:run, state) do
-    latest_id = fetch_latest()
-    Logger.info("Getting podcasts starting at ID: #{latest_id}")
-
-    podcasts =
-      state.conn
-      |> get_podcasts(latest_id, @limit)
-
-    Logger.info("Got #{Enum.count(podcasts)} podcasts.")
-
-    if podcasts != %{} do
-      %{"id" => max_id} = Enum.max_by(podcasts, &Map.get(&1, "id", 0))
-
-      podcasts
-      |> Enum.each(fn pod ->
-        Logger.info("Saving podcast metadata for ID #{pod["id"]} (#{pod["title"]}).")
-        {:ok, _} = put_podcast(pod)
-      end)
-
-      # weak control, is fine
+    try do
       latest_id = fetch_latest()
+      Logger.info("Getting podcasts starting at ID: #{latest_id}")
 
-      if max_id > latest_id do
-        Logger.info("Setting new latest fetch id: #{max_id}")
-        put_latest(max_id)
+      podcasts =
+        state.conn
+        |> get_podcasts(latest_id, @limit)
+
+      Logger.info("Got #{Enum.count(podcasts)} podcasts.")
+
+      if podcasts != %{} do
+        %{"id" => max_id} = Enum.max_by(podcasts, &Map.get(&1, "id", 0))
+
+        podcasts
+        |> Enum.each(fn pod ->
+          Logger.info("Saving podcast metadata for ID #{pod["id"]} (#{pod["title"]}).")
+          {:ok, _} = put_podcast(pod)
+        end)
+
+        # weak control, is fine
+        latest_id = fetch_latest()
+
+        if max_id > latest_id do
+          Logger.info("Setting new latest fetch id: #{max_id}")
+          put_latest(max_id)
+        end
+      else
+        Logger.info("Chilling for 30 seconds, seem to be out of podcasts")
+        :timer.sleep(30_000)
       end
-    else
-      Logger.info("Chilling for 30 seconds, seem to be out of podcasts")
-      :timer.sleep(30_000)
-    end
 
-    send(self(), :run)
-    {:noreply, state}
+      send(self(), :run)
+      {:noreply, state}
+    rescue
+      _ ->
+        Process.send_after(self(), :run, 5000)
+        {:noreply, state}
+    end
   end
 
   defp fetch_latest do

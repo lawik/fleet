@@ -57,41 +57,49 @@ if Mix.target() in [:host, :rpi4, :rpi5] do
     end
 
     def handle_info(:run, state) do
-      Logger.info("Fetching episodes from #{state.offset}")
-      {entry, dirname, offset} = get_next_parsed!(state.offset)
+      try do
+        Logger.info("Fetching episodes from #{state.offset}")
+        {entry, dirname, offset} = get_next_parsed!(state.offset)
 
-      # Deal with entry
-      if entry do
-        %{"id" => id, "title" => title, "enclosure" => %{"url" => url}} = entry
+        # Deal with entry
+        if entry do
+          %{"id" => id, "title" => title, "enclosure" => %{"url" => url}} = entry
 
-        Logger.info("Attempting download: #{url}")
+          Logger.info("Attempting download: #{url}")
 
-        case Req.get(url, into: File.stream!(state.scratch_file)) do
-          {:ok, %{status: status}} when status < 400 ->
-            Logger.info("Downloaded")
+          case Req.get(url, into: File.stream!(state.scratch_file)) do
+            {:ok, %{status: status}} when status < 400 ->
+              Logger.info("Downloaded")
 
-            transcript =
-              Nx.Serving.run(state.serving, {:file, state.scratch_file})
-              |> Enum.map(fn chunk ->
-                Logger.info("Transcript: #{inspect(chunk)}")
-                chunk
-              end)
+              transcript =
+                Nx.Serving.run(state.serving, {:file, state.scratch_file})
+                |> Enum.map(fn chunk ->
+                  Logger.info("Transcript: #{inspect(chunk)}")
+                  chunk
+                end)
 
-            key = Path.join(dirname, "transcript.json")
-            Logger.info("Transcript saved: #{key}")
-            Fleet.put_data(key, Jason.encode!(transcript))
+              key = Path.join(dirname, "transcript.json")
+              Logger.info("Transcript saved: #{key}")
+              Fleet.put_data(key, Jason.encode!(transcript))
 
-          {:ok, %{status: status}} ->
-            Logger.error("Failed to get episode ID #{id} (#{title}), status: #{inspect(status)}")
+            {:ok, %{status: status}} ->
+              Logger.error(
+                "Failed to get episode ID #{id} (#{title}), status: #{inspect(status)}"
+              )
 
-          {:error, err} ->
-            Logger.error("Failed to get episode ID #{id} (#{title}), error: #{inspect(err)}")
+            {:error, err} ->
+              Logger.error("Failed to get episode ID #{id} (#{title}), error: #{inspect(err)}")
+          end
         end
+
+        send(self(), :run)
+
+        {:noreply, %{state | offset: offset}}
+      rescue
+        _ ->
+          Process.send_after(self(), :run, 5000)
+          {:noreply, state}
       end
-
-      send(self(), :run)
-
-      {:noreply, %{state | offset: offset}}
     end
 
     defp get_next_parsed!(offset) do
