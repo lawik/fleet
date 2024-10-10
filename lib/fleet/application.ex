@@ -14,9 +14,7 @@ defmodule Fleet.Application do
 
     children =
       [
-        # Children for all targets
-        # Starts a worker by calling: Fleet.Worker.start_link(arg)
-        # {Fleet.Worker, arg},
+        Fleet.Validator
       ] ++ children(target(), Fleet.role())
 
     Supervisor.start_link(children, opts)
