@@ -74,20 +74,52 @@ defmodule Fleet do
     Req.get("https://fly.storage.tigris.dev/#{bucket()}/shared/#{key}")
   end
 
-  def list_keys_from_oldest!(prefix, offset) do
-    Req.get!("https://fly.storage.tigris.dev/#{bucket()}",
-      params: %{
-        "list-type" => 2,
-        "prefix" => "shared/#{prefix}"
-      },
-      headers: %{
-        "X-Tigris-Query" => "`Last-Modified` > \"#{offset}\" ORDER BY \`Last-Modified\` ASC"
-      }
-    )
-    |> Map.fetch!(:body)
-    |> SweetXml.xpath(~x"//ListBucketResult/Contents/Key/text()"l)
-    |> Enum.map(&to_string/1)
-    |> Enum.map(&String.replace_leading(&1, "shared/", ""))
+  def list_keys_from_oldest!(prefix, offset, continuation_token) do
+    params = %{
+      "list-type" => 2,
+      "prefix" => "shared/#{prefix}"
+    }
+
+    params =
+      if continuation_token do
+        Map.put(params, "continuation-token", continuation_token)
+      else
+        params
+      end
+
+    result =
+      Req.get("https://fly.storage.tigris.dev/#{bucket()}",
+        params: params,
+        headers: %{
+          "X-Tigris-Query" => "`Last-Modified` > \"#{offset}\" ORDER BY \`Last-Modified\` ASC"
+        },
+        max_retries: 0
+      )
+
+    case result do
+      {:ok, response} ->
+        Logger.info("Headers: #{inspect(response.headers)}")
+        # Logger.info("Body: #{response.body}")
+
+        continuation_token =
+          response.body
+          |> SweetXml.xpath(~x"//ListBucketResult/NextContinuationToken/text()")
+
+        truncated? =
+          SweetXml.xpath(response.body, ~x"//ListBucketResult/IsTruncated/text()") == "true"
+
+        keys =
+          response.body
+          |> SweetXml.xpath(~x"//ListBucketResult/Contents/Key/text()"l)
+          |> Enum.map(&to_string/1)
+          |> Enum.map(&String.replace_leading(&1, "shared/", ""))
+
+        {:ok, {keys, truncated?, continuation_token}}
+
+      {:error, err} ->
+        Logger.warning("Failed to list keys from oldest: #{inspect(err)}")
+        {:error, err}
+    end
   end
 
   def list_keys!(prefix) do

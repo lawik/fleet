@@ -44,7 +44,7 @@ defmodule Fleet.Parser do
                   end,
                   {:asc, DateTime}
                 )
-                |> Enum.map(fn entry ->
+                |> Enum.each(fn entry ->
                   hash_id = Fleet.episode_id_hash(entry.id)
                   Logger.info("Episode ID #{entry.id} hashed to #{hash_id}")
 
@@ -58,8 +58,6 @@ defmodule Fleet.Parser do
                       |> Jason.encode!()
 
                     Fleet.put_data("podcasts/#{id}/episodes/#{hash_id}/entry.json", data)
-                  else
-                    Logger.info("No enclosure, skipping episode: #{hash_id}")
                   end
                 end)
 
@@ -91,23 +89,33 @@ defmodule Fleet.Parser do
     end
   end
 
-  defp get_next_meta!(offset) do
-    Fleet.list_keys_from_oldest!("podcasts", offset)
-    |> tap(fn keys ->
-      Logger.info("Got #{Enum.count(keys)} keys.")
-    end)
-    |> check_for_new_feed(offset)
+  defp get_next_meta!(offset, cont \\ nil) do
+    case Fleet.list_keys_from_oldest!("podcasts", offset, cont) do
+      {:ok, {keys, truncated?, continuation_token}} ->
+        keys
+        |> tap(fn keys ->
+          Logger.info("Got #{Enum.count(keys)} keys.")
+        end)
+        |> check_for_new_feed(offset, truncated?, continuation_token)
+
+      {:error, err} ->
+        Logger.warning("Get next meta failed: #{inspect(err)}")
+    end
   end
 
-  defp check_for_new_feed([], offset) do
+  defp check_for_new_feed([], offset, truncated?, cont) do
     Logger.info("Exhausted keys, wrapping up for another go-around. New offset: #{offset}")
 
     # Should have moved the offset forward at least
-    {nil, offset}
+    if truncated? do
+      get_next_meta!(offset, cont)
+    else
+      {nil, offset}
+    end
   end
 
-  defp check_for_new_feed([key | keys], offset) do
-    Logger.info("Key: #{key}")
+  defp check_for_new_feed([key | keys], offset, truncated?, cont) do
+    # Logger.info("Key: #{key}")
 
     if String.ends_with?(key, "/meta.json") do
       dirname = Path.dirname(key)
@@ -128,11 +136,11 @@ defmodule Fleet.Parser do
         {Jason.decode!(body), last_modified}
       else
         Logger.info("Skipping as marker exists for: #{key}")
-        check_for_new_feed(keys, last_modified)
+        check_for_new_feed(keys, last_modified, truncated?, cont)
       end
     else
-      Logger.debug("Not a meta.json, skipping.")
-      check_for_new_feed(keys, offset)
+      # Logger.debug("Not a meta.json, skipping.")
+      check_for_new_feed(keys, offset, truncated?, cont)
     end
   end
 end
