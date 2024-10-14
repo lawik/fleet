@@ -74,13 +74,7 @@ defmodule Fleet.Databaser do
         podcasts
         |> Enum.each(fn pod ->
           Logger.info("Saving podcast metadata for ID #{pod["id"]} (#{pod["title"]}).")
-
-          try do
-            {:ok, _} = put_podcast(pod)
-          rescue
-            err ->
-              Logger.warning("Failed to save podcast: #{inspect(err)}")
-          end
+          {:ok, _} = put_podcast(pod)
         end)
 
         # weak control, is fine

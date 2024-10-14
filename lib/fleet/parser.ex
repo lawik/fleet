@@ -27,7 +27,6 @@ defmodule Fleet.Parser do
 
       # Deal with feed
       if feed do
-        Logger.info("Feed not nil")
         %{"id" => id, "url" => url, "title" => title} = feed
 
         case Req.get(url) do
@@ -80,16 +79,13 @@ defmodule Fleet.Parser do
           {:error, err} ->
             Logger.error("Failed to get RSS feed for ID #{id} (#{title}), error: #{inspect(err)}")
         end
-      else
-        Logger.warning("Feed borked")
       end
 
       send(self(), :run)
 
       {:noreply, %{state | offset: offset}}
     rescue
-      e ->
-        Logger.warning("Error on fetch: #{inspect(e)}")
+      _ ->
         Process.send_after(self(), :run, 5000)
         {:noreply, state}
     end

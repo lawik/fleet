@@ -6,24 +6,7 @@ defmodule Fleet do
   require Logger
   import SweetXml
 
-  def ensure_namespace do
-    case Process.get(:namespace) do
-      nil ->
-        case Req.get("https://fleet-sign.fly.dev/namespace") do
-          {:ok, %{body: %{"namespace" => namespace}}} ->
-            Logger.info("Got namespace: #{namespace}")
-            Process.put(:namespace, namespace)
-            namespace
-
-          err ->
-            Logger.warning("Failed to get namespace: #{inspect(err)}")
-            raise "no namespace"
-        end
-
-      namespace ->
-        namespace
-    end
-  end
+  @namespace "redo"
 
   def upload_data do
     {:ok, geo} = Whenwhere.ask()
@@ -88,59 +71,36 @@ defmodule Fleet do
   end
 
   def get_data(key) do
-    namespace = ensure_namespace()
-    Req.get("https://fly.storage.tigris.dev/#{bucket()}/#{namespace}/#{key}")
+    Req.get("https://fly.storage.tigris.dev/#{bucket()}/#{@namespace}/#{key}")
   end
 
   def list_keys_from_oldest!(prefix, offset) do
-    namespace = ensure_namespace()
-
-    full = "#{namespace}/#{prefix}"
-    Logger.info("Prefix: #{full}")
-    query = "`Last-Modified` > \"#{offset}\" ORDER BY \`Last-Modified\` ASC"
-    Logger.info("query: #{query}")
-
-    response =
-      Req.get("https://fly.storage.tigris.dev/#{bucket()}",
-        params: %{
-          "list-type" => 2,
-          "prefix" => "#{namespace}/#{prefix}"
-        },
-        headers: %{
-          "X-Tigris-Query" => "`Last-Modified` > \"#{offset}\" ORDER BY \`Last-Modified\` ASC"
-        },
-        max_retries: 0
-      )
-
-    Logger.info("Response: #{inspect(response)}")
-
-    case response do
-      {:ok, response} ->
-        response
-        |> Map.fetch!(:body)
-        |> SweetXml.xpath(~x"//ListBucketResult/Contents/Key/text()"l)
-        |> Enum.map(&to_string/1)
-        |> Enum.map(&String.replace_leading(&1, "#{namespace}/", ""))
-
-      {:error, err} ->
-        Logger.warning("Failed to list keys from oldest: #{inspect(err)}")
-        []
-    end
-  end
-
-  def list_keys!(prefix) do
-    namespace = ensure_namespace()
-
     Req.get!("https://fly.storage.tigris.dev/#{bucket()}",
       params: %{
         "list-type" => 2,
-        "prefix" => "#{namespace}/#{prefix}"
+        "prefix" => "#{@namespace}/#{prefix}"
+      },
+      headers: %{
+        "X-Tigris-Query" => "`Last-Modified` > \"#{offset}\" ORDER BY \`Last-Modified\` ASC"
       }
     )
     |> Map.fetch!(:body)
     |> SweetXml.xpath(~x"//ListBucketResult/Contents/Key/text()"l)
     |> Enum.map(&to_string/1)
-    |> Enum.map(&String.replace_leading(&1, "#{namespace}/", ""))
+    |> Enum.map(&String.replace_leading(&1, "#{@namespace}/", ""))
+  end
+
+  def list_keys!(prefix) do
+    Req.get!("https://fly.storage.tigris.dev/#{bucket()}",
+      params: %{
+        "list-type" => 2,
+        "prefix" => "#{@namespace}/#{prefix}"
+      }
+    )
+    |> Map.fetch!(:body)
+    |> SweetXml.xpath(~x"//ListBucketResult/Contents/Key/text()"l)
+    |> Enum.map(&to_string/1)
+    |> Enum.map(&String.replace_leading(&1, "#{@namespace}/", ""))
   end
 
   def claimed?(key) do
