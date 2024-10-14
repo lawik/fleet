@@ -71,7 +71,7 @@ defmodule Fleet do
   end
 
   def get_data(key) do
-    Req.get("https://fly.storage.tigris.dev/#{bucket()}/#{@namespace}/#{key}")
+    Req.get("https://fly.storage.tigris.dev/#{bucket()}/#{@redo}/#{key}")
   end
 
   def list_keys_from_oldest!(prefix, offset) do
