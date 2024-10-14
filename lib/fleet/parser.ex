@@ -127,7 +127,7 @@ defmodule Fleet.Parser do
         Logger.info("Claimed #{key} with #{marker}")
         {Jason.decode!(body), last_modified}
       else
-        # Logger.info("Skipping as marker exists for: #{key}")
+        Logger.info("Skipping as marker exists for: #{key}")
         check_for_new_feed(keys, last_modified)
       end
     else
