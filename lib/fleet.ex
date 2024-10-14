@@ -6,7 +6,7 @@ defmodule Fleet do
   require Logger
   import SweetXml
 
-  #  alias ExAws.S3
+  @namespace "redo"
 
   def upload_data do
     {:ok, geo} = Whenwhere.ask()
@@ -71,14 +71,14 @@ defmodule Fleet do
   end
 
   def get_data(key) do
-    Req.get("https://fly.storage.tigris.dev/#{bucket()}/shared/#{key}")
+    Req.get("https://fly.storage.tigris.dev/#{bucket()}/#{@redo}/#{key}")
   end
 
   def list_keys_from_oldest!(prefix, offset) do
     Req.get!("https://fly.storage.tigris.dev/#{bucket()}",
       params: %{
         "list-type" => 2,
-        "prefix" => "shared/#{prefix}"
+        "prefix" => "#{@namespace}/#{prefix}"
       },
       headers: %{
         "X-Tigris-Query" => "`Last-Modified` > \"#{offset}\" ORDER BY \`Last-Modified\` ASC"
@@ -87,20 +87,20 @@ defmodule Fleet do
     |> Map.fetch!(:body)
     |> SweetXml.xpath(~x"//ListBucketResult/Contents/Key/text()"l)
     |> Enum.map(&to_string/1)
-    |> Enum.map(&String.replace_leading(&1, "shared/", ""))
+    |> Enum.map(&String.replace_leading(&1, "#{@namespace}/", ""))
   end
 
   def list_keys!(prefix) do
     Req.get!("https://fly.storage.tigris.dev/#{bucket()}",
       params: %{
         "list-type" => 2,
-        "prefix" => "shared/#{prefix}"
+        "prefix" => "#{@namespace}/#{prefix}"
       }
     )
     |> Map.fetch!(:body)
     |> SweetXml.xpath(~x"//ListBucketResult/Contents/Key/text()"l)
     |> Enum.map(&to_string/1)
-    |> Enum.map(&String.replace_leading(&1, "shared/", ""))
+    |> Enum.map(&String.replace_leading(&1, "#{@namespace}/", ""))
   end
 
   def claimed?(key) do
