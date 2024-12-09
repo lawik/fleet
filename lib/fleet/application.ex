@@ -15,34 +15,15 @@ defmodule Fleet.Application do
     children =
       [
         Fleet.Validator
-      ] ++ children(target(), Fleet.role())
+      ] ++ children()
 
     Supervisor.start_link(children, opts)
   end
 
   # List all child processes to be supervised
-  def children(:host, :databaser) do
-    [{Fleet.Databaser, path: "/tmp/podcast-index.sqlite"}]
-  end
-
-  def children(:host, :parser) do
-    [Fleet.Parser]
-  end
-
-  def children(:host, :transcripter) do
-    [{Fleet.Transcripter, scratch_file: "/tmp/scratch.mp3"}]
-  end
-
-  def children(_target, :transcripter) do
-    [Fleet.Transcripter]
-  end
-
-  def children(_target, :databaser) do
-    [Fleet.Databaser]
-  end
-
-  def children(_target, :parser) do
-    [Fleet.Parser]
+  def children() do
+    #[{Fleet.Databaser, path: "/tmp/podcast-index.sqlite"}]
+    []
   end
 
   if Mix.target() == :host do

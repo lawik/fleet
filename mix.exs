@@ -3,7 +3,7 @@ defmodule Fleet.MixProject do
 
   # @app :fleet
   @app :berlin2024
-  @version "0.3.21"
+  @version "0.4.1"
   @all_targets [
     :rpi,
     :rpi0,
@@ -62,31 +62,20 @@ defmodule Fleet.MixProject do
       # bumps to Nerves systems. Since these include Linux kernel and Erlang
       # version updates, please review their release notes in case
       # changes to your application are needed.
-      {:nerves_system_rpi, "~> 1.24", runtime: false, targets: :rpi},
-      {:nerves_system_rpi0, "~> 1.24", runtime: false, targets: :rpi0},
-      {:nerves_system_rpi2, "~> 1.24", runtime: false, targets: :rpi2},
-      {:nerves_system_rpi3, "~> 1.24", runtime: false, targets: :rpi3},
-      {:nerves_system_rpi3a, "~> 1.24", runtime: false, targets: :rpi3a},
-      {:nerves_system_rpi4, "~> 1.24", runtime: false, targets: :rpi4},
-      # {
-      #   :nerves_system_rpi4,
-      #   # nerves: [compile: true],
-      #   path: "../../projects/nerves_systems/src/nerves_system_rpi4",
-      #   runtime: false,
-      #   targets: :rpi4
-      # },
-      {:nerves_system_rpi5, "~> 0.3.0", runtime: false, targets: :rpi5},
-      {:nerves_system_bbb, "~> 2.19", runtime: false, targets: :bbb},
-      {:nerves_system_osd32mp1, "~> 0.15", runtime: false, targets: :osd32mp1},
-      {:nerves_system_x86_64, "~> 1.24", runtime: false, targets: :x86_64},
-      {:nerves_system_grisp2, "~> 0.8", runtime: false, targets: :grisp2},
-      {:nerves_system_mangopi_mq_pro, "~> 0.6", runtime: false, targets: :mangopi_mq_pro},
-      {:nerves_system_srhub, "~> 0.33", runtime: false, targets: :srhub},
-      # {:nerves_hub_link, "~> 2.5"},
-      {:nerves_hub_link,
-       github: "lawik/nerves_hub_link", branch: "extension-pubsub", override: true},
-      {:nerves_hub_link_geo, github: "nervescloud/nerves_hub_link_geo"},
-      {:nerves_hub_health, github: "nervescloud/nerves_hub_health"},
+      {:nerves_system_rpi, "~> 1.29", runtime: false, targets: :rpi},
+      {:nerves_system_rpi0, "~> 1.29", runtime: false, targets: :rpi0},
+      {:nerves_system_rpi2, "~> 1.29", runtime: false, targets: :rpi2},
+      {:nerves_system_rpi3, "~> 1.29", runtime: false, targets: :rpi3},
+      {:nerves_system_rpi3a, "~> 1.29", runtime: false, targets: :rpi3a},
+      {:nerves_system_rpi4, "~> 1.29", runtime: false, targets: :rpi4},
+      {:nerves_system_rpi5, "~> 0.4.0", runtime: false, targets: :rpi5},
+      {:nerves_system_bbb, "~> 2.25", runtime: false, targets: :bbb},
+      {:nerves_system_osd32mp1, "~> 0.20", runtime: false, targets: :osd32mp1},
+      {:nerves_system_x86_64, "~> 1.29", runtime: false, targets: :x86_64},
+      {:nerves_system_grisp2, "~> 0.13", runtime: false, targets: :grisp2},
+      {:nerves_system_mangopi_mq_pro, "~> 0.11", runtime: false, targets: :mangopi_mq_pro},
+      {:nerves_system_srhub, "~> 0.34", runtime: false, targets: :srhub},
+      {:nerves_hub_link, "~> 2.5"},
       {:nerves_hub_cli, "~> 2.0"},
       {:req, "~> 0.5.6"},
       {:multipart, "~> 0.4.0"},
@@ -95,10 +84,8 @@ defmodule Fleet.MixProject do
       # {:membrane_mp3_mad_plugin, "~> 0.18.3"},
       # {:membrane_ffmpeg_swresample_plugin, "~> 0.20.2"},
       # {:bumblebee, "~> 0.5"},
-      # for axon
       {:table_rex, "~> 4.0", override: true},
-      {:axon, github: "elixir-nx/axon", override: true, targets: [:rpi4, :rpi5, :host]},
-      {:bumblebee, github: "elixir-nx/bumblebee", override: true, targets: [:rpi4, :rpi5, :host]},
+      {:bumblebee, "~> 0.6", targets: [:rpi4, :rpi5, :host]},
       {:nx, "~> 0.7", targets: [:rpi4, :rpi5, :host]},
       {:exla, "~> 0.7", targets: [:rpi4, :rpi5, :host]},
       {:exqlite, "~> 0.24.2"},
@@ -108,7 +95,8 @@ defmodule Fleet.MixProject do
       {:sweet_xml, "~> 0.7"},
       {:feeder_ex, "~> 1.1"},
       {:feeder, "~> 2.3", manager: :rebar3, override: true},
-      {:timex, "~> 3.7"}
+      {:timex, "~> 3.7"},
+      {:whenwhere, "~> 0.1.1"}
     ]
   end
 
